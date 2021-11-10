@@ -1,23 +1,9 @@
 // import logo from './logo.svg';
 import React from 'react';
-import Person from './Person/Person';
-import Styled from 'styled-components';
+import Persons from '../Components/Persons/Persons'
+import CockPit from '../Components/Cockpit/Cockpit'
+import AuthContext from '../context/auth-context'
 import './App.css';
-
-const StyledButton = Styled.button`
-  background-color: ${props => props.alt ? 'red': 'green' };
-  color: white;
-  font: inherit;
-  border: 1px solid blue;
-  padding: 8px;
-  cursor: pointer;
-  text-align: center;
-
-  &:hover {
-    background-color: lightgreen;
-    color: black;
-  }
-`;
 
 class App extends React.Component {
   state = {
@@ -29,6 +15,8 @@ class App extends React.Component {
     ],
     counter: 0,
     showPersons: false,
+    showCockpit: true,
+    isAuthenticated: false,
   };
   logThePersonState = () => {
     console.log(this.state);
@@ -63,44 +51,63 @@ class App extends React.Component {
       showPersons: !this.state.showPersons,
     })
   }
+  loginHandler = () => {
+    this.setState({ isAuthenticated: !this.state.isAuthenticated });
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    console.log('[App.js] getDerivedStateFromProps');
+    return state;
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log('[App.js] shouldComponentUpdate');
+    return true;
+  }
+
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    console.log('[App.js] getSnapshotBeforeUpdate');
+    return { msg: 'Hi this a snapshot'};
+  }
+
+  componentDidMount() {
+    console.log('[App.js] componentDidMount');
+  }
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    console.log('[App.js] componentDidUpdate');
+    console.log(snapshot.msg);
+  }
   render() {
+    console.log('[App.js] render');
     let persons = null;
     if (this.state.showPersons) {
       persons = (
-        <div>
-          {
-            this.state.persons.map((person, index) => {
-              return (<Person
-                key={person.id}
-                name={person.name}
-                age={person.age}
-                deleteUserHandler={this.deleteUserHandler.bind(this, index)}
-                updateValue={(event) => this.updateValue(event, person.id)}
-                switchHandler={this.switchHandler.bind(this, person.name)}/>)
-            })
-          } 
-        </div>
+        <Persons
+          persons = { this.state.persons }
+          deleteUserHandler = { this.deleteUserHandler }
+          updateValue = { this.updateValue }
+          switchHandler = { this.switchHandler }
+          isAuthenticated = { this.state.isAuthenticated }/>
       )
-      // style.backgroundColor = 'red';
-      // style[':hover'] = {
-      //   backgroundColor: 'lightgreen',
-      //   color: 'black'
-      // }
     }
-    const classes = [];
-    if (this.state.persons.length <= 2) classes.push('red');
-    if (this.state.persons.length <= 1) classes.push('bold');
     return (
         <div className="App">
-          <h1>Hi I am a react learner</h1>
-          <p className={classes.join(' ')}>Yeah this is working</p>
-          <StyledButton
-            alt= {this.state.showPersons}
-            key='1'
-            onClick={this.toggleHandler}>Toggle
-          </StyledButton>
-          <StyledButton onClick={this.logThePersonState}>Get the State</StyledButton>
-          {persons} 
+          <button onClick={() => { this.setState({ showCockpit: !this.state.showCockpit })}}>Toggle cockPit</button>
+          <AuthContext.Provider value={{
+            isAuthenticated: this.state.isAuthenticated,
+            login: this.loginHandler
+          }}>
+            { this.state.showCockpit ? (<CockPit
+              title = { this.props.title }
+              personLength = { this.state.persons.length }
+              showPersons = { this.state.showPersons }
+              toggleHandler = { this.toggleHandler }
+              logThePersonState = { this.logThePersonState }
+              login={this.loginHandler}
+              isAuthenticated = { this.state.isAuthenticated}
+            />) : null }
+            {persons} 
+          </AuthContext.Provider>
         </div>
     );
   }
